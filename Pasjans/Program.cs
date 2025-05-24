@@ -8,6 +8,7 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Pasjans
 {
@@ -66,11 +67,11 @@ namespace Pasjans
                 if (inputElements[0] == "m" || inputElements[0] == "move")
                 {
                     if (inputElements.Length == 4 &&
-                        int.TryParse(inputElements[1], out int stackOne) && 
-                        int.TryParse(inputElements[2], out int amount) && 
+                        int.TryParse(inputElements[1], out int amount) && 
+                        int.TryParse(inputElements[2], out int stackOne) && 
                         int.TryParse(inputElements[3], out int stackTwo))
                     {
-                        //info = MoveCard(stacks, stackOne - 1, stackTwo - 1);
+                        info = MoveCards(stacks, stackOne - 1, amount, stackTwo - 1);
                     }
                     else
                         info = "Nieprawidlowe wejscie.";
@@ -87,7 +88,30 @@ namespace Pasjans
             }
         }
 
-        
+        static string MoveCards(Stack[] stacks, int amount, int stackOne, int stackTwo)
+        {
+            int[] cards = (int[])stacks[stackOne].GetTopCards(amount).Clone();
+            int cardOne = cards[amount - 1];
+            int cardTwo = stacks[stackTwo].GetTopCards(1)[0];
+
+            if (CanMoveCard(cardOne, cardTwo))
+            {
+                stacks[stackOne].DeleteTop(amount);
+                stacks[stackTwo].AddCards(cards);
+            }
+
+            return "zrobiono";
+        }
+
+        static bool CanMoveCard(int cardOne, int cardTwo)
+        {
+            int valueOne = cardOne / 4;
+            int valueTwo = cardTwo / 4;
+            int suitOne = cardOne % 4;
+            int suitTwo = cardTwo % 4;
+
+            return valueOne == valueTwo - 1 && ((suitOne >= 2 && suitTwo < 2) || (suitTwo >= 2 && suitOne < 2));
+        }
 
         // Rysowanie w konsoli stosow
         static void Draw(string[] lines, Stack[] stacks, string info)

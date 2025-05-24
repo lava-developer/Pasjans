@@ -51,7 +51,7 @@ namespace Pasjans
             for (int i = 0; i < exposed - 1; i++)
             {
                 drawLines.Add(topPreset);
-                drawLines.Add(lines[places[exposed - 1 + i] * 7 + 1]);
+                drawLines.Add(lines[places[exposed - 1 - i] * 7 + 1]);
             }
             // Potem dajemy linie karty ktora jest odslonieta pobrane z pliku
             for (int i = 0; i < 7; i++)
@@ -85,8 +85,10 @@ namespace Pasjans
         // Funkcja usuwajaca gorna karte stosu
         public void DeleteTop(int amount)
         {
-            if (exposed > amount)
-                exposed -= amount;
+            exposed -= amount;
+            if (exposed < 1)
+                exposed = 1;
+
             for (int i = 0; i < amount; i++)
             {
                 places.RemoveAt(0);
@@ -95,16 +97,12 @@ namespace Pasjans
 
         public void AddCards(int[] cards)
         {
+            exposed += cards.Length;
 
-            for (int i = cards.Length - 1; i >= 0; i--)
+            for (int i = 0; i < cards.Length; i++)
             {
-                places.Insert(0, cards[i]); 
+                places.Insert(i, cards[i]); 
             }
-
-            Debug.WriteLine("Dodaję do talii:");
-            foreach (var c in cards)
-                Debug.Write(c + " ");
-            Debug.WriteLine("");
         }
 
         public void PrintStack()
