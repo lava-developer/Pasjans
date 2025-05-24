@@ -9,14 +9,17 @@ using System.Threading.Tasks;
 
 namespace Pasjans
 {
+    // Klasa stosow na ktorych znajduja sie karty
+    // Wazne: w kartach na stosie w liscie places karta najbardziej na wierzchu to ta z indeksem 0
     internal class Stack
     {
         // Tworzenie listy na przechowywanie kart jakie sa na stosie
         public List<int> places = new List<int>();
 
+        // Zmienna ktora przechowuje ilosc kart widocznych dla gracza (odslonietych)
         public int exposed;
 
-        // Preset pustego miejsca
+        // Presety do rysowania kart
         const string emptyPreset = "           ";
         const string topPreset = "┌─────────┐";
 
@@ -33,7 +36,7 @@ namespace Pasjans
             // Zmienna do przechowywania linii
             List<string> drawLines = new List<string>();
             
-            // Jesli stos jest pusty zwracamy 20 pustych linii
+            // Jesli stos jest pusty zwracamy 25 pustych linii
             if (places.Count == 0)
             {
                 for (int i = 0; i < 25; i++)
@@ -48,17 +51,19 @@ namespace Pasjans
             {
                 drawLines.Add(topPreset);
             }
-            for (int i = 0; i < exposed - 1; i++)
-            {
-                drawLines.Add(topPreset);
-                drawLines.Add(lines[places[exposed - 1 - i] * 7 + 1]);
-            }
-            // Potem dajemy linie karty ktora jest odslonieta pobrane z pliku
+            // Potem jesli jest wiecej kart odslonietych niz tylko ta na samym wierzchu dodajemy ich wystajace gory z wartoscia pobrana z pliku
+            if ( exposed > 1)
+                for (int i = 0; i < exposed - 1; i++)
+                {
+                    drawLines.Add(topPreset);
+                    drawLines.Add(lines[places[exposed - 1 - i] * 7 + 1]);
+                }
+            // Potem dajemy linie karty ktora jest na samym wierzchu pobrane z pliku
             for (int i = 0; i < 7; i++)
             {
                 drawLines.Add(lines[places[0] * 7 + i]);
             }
-            // Reszte linii dajemy puste aby razem bylo 20
+            // Reszte linii dajemy puste aby razem bylo 25
             for (int i = 0; i < 25 - (places.Count + 5 + exposed); i++)
             {
                 drawLines.Add(emptyPreset);
@@ -66,12 +71,14 @@ namespace Pasjans
 
             return drawLines;
         }
-
+        
+        // Funkcja zwracajaca ilosc odslonietych kart
         public int GetExposed()
         {
             return exposed;
         }
 
+        // Funkcja zwracajaca okreslona ilosc kart ze szczytu stosu
         public int[] GetTopCards(int amount)
         {
             int[] cards = new int[amount];
@@ -82,19 +89,20 @@ namespace Pasjans
             return cards;
         }
 
-        // Funkcja usuwajaca gorna karte stosu
+        // Funkcja usuwajaca okreslona ilosc kart z gory stosu
         public void DeleteTop(int amount)
         {
-            exposed -= amount;
-            if (exposed < 1)
-                exposed = 1;
-
             for (int i = 0; i < amount; i++)
             {
                 places.RemoveAt(0);
             }
+
+            exposed -= amount;
+            if (exposed < 1 && places.Count > 0)
+                exposed = 1;
         }
 
+        // Funkcja dodajaca okreslone karty na szczyt stosu
         public void AddCards(int[] cards)
         {
             exposed += cards.Length;
@@ -105,6 +113,7 @@ namespace Pasjans
             }
         }
 
+        // Funkcja do debugowania
         public void PrintStack()
         {
             foreach (int i in places)

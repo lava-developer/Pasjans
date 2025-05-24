@@ -46,71 +46,90 @@ namespace Pasjans
                 stacks[i] = new Stack(stackPlaces[i], 1);
             }
 
-            stacks[0].exposed = 4;
+            // Deklaracja zmiennej przechowujacej informacje ktore beda wyswietlane w konsoli
+            string info = "Wykonaj ruch.";
 
-            // Pierwsze wyrysowanie kart
-            Draw(lines, stacks, "Wykonaj ruch.");
-
-            string info = "";
-
-            stacks[0].PrintStack();
-
+            // Petla gry
             while (true)
             {
+                // Rysowanie elementow w konsoli
                 Console.Clear();
                 Draw(lines, stacks, info);
 
+                // Pobieranie danych od gracza
                 string input = Console.ReadLine();
+                string[] inputElements = input.Split(new[] { ' ' },StringSplitOptions.RemoveEmptyEntries);
+                string command = inputElements[0];
 
-                string[] inputElements = input.Split(' ');
-
-                if (inputElements[0] == "m" || inputElements[0] == "move")
+                // Jesli wybrano komende przesuwania kart i argumenty sa poprawne wywolujemy funkcje przesuwajaca karty
+                if ((command == "m" || command == "move" || command == "p" || command == "przesun") &&
+                    inputElements.Length == 4 &&
+                    int.TryParse(inputElements[1], out int amount) &&
+                    int.TryParse(inputElements[2], out int stackOne) &&
+                    int.TryParse(inputElements[3], out int stackTwo))
                 {
-                    if (inputElements.Length == 4 &&
-                        int.TryParse(inputElements[1], out int amount) && 
-                        int.TryParse(inputElements[2], out int stackOne) && 
-                        int.TryParse(inputElements[3], out int stackTwo))
-                    {
-                        info = MoveCards(stacks, stackOne - 1, amount, stackTwo - 1);
-                    }
-                    else
-                        info = "Nieprawidlowe wejscie.";
+                    info = MoveCards(stacks, amount, stackOne - 1, stackTwo - 1);
                 }
-                else if (inputElements[0] == "rem")
+                // Funkcja do debugowania
+                else if (command == "rem")
                 {
                     stacks[0].DeleteTop(1);
                     info = "Usunięto kartę.";
                 }
-                else if (inputElements[0] == "exit")
+                // Jesli wybrano komende wyjscia to wychodzimy z gry
+                else if (command == "e" || command == "exit" || command == "w" || command == "wyjscie")
                     break;
+                // W innych wypadkach zwracamy niepoprawne wejscie
                 else
                     info = "Niepoprawne wejście.";
             }
         }
 
+        // Funkcja odpowiadajca za przesuwanie kart
         static string MoveCards(Stack[] stacks, int amount, int stackOne, int stackTwo)
         {
-            int[] cards = (int[])stacks[stackOne].GetTopCards(amount).Clone();
-            int cardOne = cards[amount - 1];
-            int cardTwo = stacks[stackTwo].GetTopCards(1)[0];
+            string info = "Niedozwolony ruch.";
 
-            if (CanMoveCard(cardOne, cardTwo))
+            // Przechodzimy dalej tylko jesli ilosc jest mniejsza lub rowna ilosci odlonietych (nie mozna zabrac wiecej niz widzimy)
+            if (stacks[stackOne].GetExposed() >= amount)
             {
-                stacks[stackOne].DeleteTop(amount);
-                stacks[stackTwo].AddCards(cards);
+                // Pobieramy ze stosu pierwszego karty do przesuniecia
+                int[] cards = (int[])stacks[stackOne].GetTopCards(amount).Clone();
+                int cardOne = cards[amount - 1];
+                int cardTwo = 0;
+                bool isTwoEmpty = false;
+
+                // Jesli drugi stos nie jest pusty to bierzemy z niego wierzchnia karte a jesli jest to zapisujemy to w zmiennej isTwoEmpty
+                if (stacks[stackTwo].GetExposed() > 0)
+                    cardTwo = stacks[stackTwo].GetTopCards(1)[0];
+                else
+                    isTwoEmpty = true;
+
+                // Sprawdzamy funkcja CanMoveCard czy mozna przesunac karte biorac pod uwage nasze karty i czy stos drugi jest pusty i jesli mozna to je przesuwamy
+                if (CanMoveCard(cardOne, cardTwo, isTwoEmpty))
+                {
+                    stacks[stackOne].DeleteTop(amount);
+                    stacks[stackTwo].AddCards(cards);
+
+                    info = "Przesunięto karty.";
+                }
             }
 
-            return "zrobiono";
+            return info;
         }
 
-        static bool CanMoveCard(int cardOne, int cardTwo)
+        // Funkcja sprawdzajaca czy mozna przesunac karty
+        static bool CanMoveCard(int cardOne, int cardTwo, bool isTwoEmpty)
         {
+            // Obliczanie wartosci kart i ich kolory na podstawie ich id
             int valueOne = cardOne / 4;
             int valueTwo = cardTwo / 4;
             int suitOne = cardOne % 4;
             int suitTwo = cardTwo % 4;
 
-            return valueOne == valueTwo - 1 && ((suitOne >= 2 && suitTwo < 2) || (suitTwo >= 2 && suitOne < 2));
+            // Zwracamy odpowiedz na podstawie warunkow
+            return (valueOne == valueTwo - 1 && ((suitOne >= 2 && suitTwo < 2) || (suitTwo >= 2 && suitOne < 2))) ||
+                (isTwoEmpty && valueOne == 12);
         }
 
         // Rysowanie w konsoli stosow
@@ -139,15 +158,15 @@ namespace Pasjans
                 Console.WriteLine();
             }
 
+            // Printowanie informacji dla uzytkownika
             Console.WriteLine(info);
 
+            // Debug
             foreach (Stack stack in stacks)
             {
                 Console.Write(stack.places.Count + "," + stack.exposed + ";");
             }
             Console.WriteLine();
-
-            stacks[0].PrintStack();
 
             Console.Write("> ");
         }
