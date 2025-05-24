@@ -14,6 +14,9 @@ namespace Pasjans
 {
     internal class Program
     {
+        // Preset pustego miejsca
+        const string emptyPreset = "           ";
+
         static void Main(string[] args)
         {
             // Ustawienie enkodowania aby dzialaly znaki specjalne
@@ -39,6 +42,16 @@ namespace Pasjans
                 }
             }
 
+            // Stworzenie listy na karty poczatkowe do stosu do dobierania i wylosowanie ich
+            List<int> drawStackCards = new List<int>();
+            for (int i = 0; i < 24;  i++)
+            {
+                drawStackCards.Add(r.Next(0, 52));
+            }
+
+            // Stworzenie stosu do dobierania
+            DrawStack drawStack = new DrawStack(drawStackCards);
+
             // Stworzenie stosow kart
             Stack[] stacks = new Stack[7];
             for (int i = 0;i < 7; i++)
@@ -54,34 +67,52 @@ namespace Pasjans
             {
                 // Rysowanie elementow w konsoli
                 Console.Clear();
-                Draw(lines, stacks, info);
+                Draw(lines, stacks, drawStack, info);
 
                 // Pobieranie danych od gracza
                 string input = Console.ReadLine();
                 string[] inputElements = input.Split(new[] { ' ' },StringSplitOptions.RemoveEmptyEntries);
-                string command = inputElements[0];
 
-                // Jesli wybrano komende przesuwania kart i argumenty sa poprawne wywolujemy funkcje przesuwajaca karty
-                if ((command == "m" || command == "move" || command == "p" || command == "przesun") &&
-                    inputElements.Length == 4 &&
-                    int.TryParse(inputElements[1], out int amount) &&
-                    int.TryParse(inputElements[2], out int stackOne) &&
-                    int.TryParse(inputElements[3], out int stackTwo))
+                info = "Niepoprawne wejście";
+
+                // Sprawdzenie czy wejscie nie jest puste
+                if (inputElements.Length != 0)
                 {
-                    info = MoveCards(stacks, amount, stackOne - 1, stackTwo - 1);
+                    string command = inputElements[0];
+
+                    // Jesli wybrano komende przesuwania kart i argumenty sa poprawne wywolujemy funkcje przesuwajaca karty
+                    if (command == "m" || command == "move" || command == "p" || command == "przesun")
+                    {
+                        if (inputElements.Length == 4 &&
+                        int.TryParse(inputElements[1], out int amount) &&
+                        int.TryParse(inputElements[2], out int stackOne) &&
+                        int.TryParse(inputElements[3], out int stackTwo))
+                        {
+                            info = MoveCards(stacks, amount, stackOne - 1, stackTwo - 1);
+                        }
+                        // W tym przypadku pobieramy karte ze stosu
+                        else if (inputElements[1] == "d" &&
+                        int.TryParse(inputElements[2], out int stack))
+                        {
+                            info = MoveCardFromDraw(drawStack, stacks, stack - 1);
+                        }
+                    }
+                    // Jesli wybrano komende do przekladania kart ze stosu to wywolujemy funkcje ktora to robi
+                    else if (command == "d" || command == "draw" || command == "dobierz")
+                    {
+                        drawStack.Draw();
+                        info = "Dobrano kartę.";
+                    }
+                    // Funkcja do debugowania
+                    else if (command == "rem")
+                    {
+                        stacks[0].DeleteTop(1);
+                        info = "Usunięto kartę.";
+                    }
+                    // Jesli wybrano komende wyjscia to wychodzimy z gry
+                    else if (command == "e" || command == "exit" || command == "w" || command == "wyjscie")
+                        break;
                 }
-                // Funkcja do debugowania
-                else if (command == "rem")
-                {
-                    stacks[0].DeleteTop(1);
-                    info = "Usunięto kartę.";
-                }
-                // Jesli wybrano komende wyjscia to wychodzimy z gry
-                else if (command == "e" || command == "exit" || command == "w" || command == "wyjscie")
-                    break;
-                // W innych wypadkach zwracamy niepoprawne wejscie
-                else
-                    info = "Niepoprawne wejście.";
             }
         }
 
@@ -118,6 +149,34 @@ namespace Pasjans
             return info;
         }
 
+        // Funkcja sluzaca do przekladania karty ze stosu do dobierania do zwyklego stosu
+        static string MoveCardFromDraw(DrawStack drawStack, Stack[] stacks, int stack)
+        {
+            string info = "Nieprawidłowy ruch.";
+
+            // Pobieramy ze stosu do dobierania karte do przesuniecia
+            int cardOne = drawStack.GetDrawCard();
+            int cardTwo = 0;
+            bool isTwoEmpty = false;
+
+            // Jesli drugi stos nie jest pusty to bierzemy z niego wierzchnia karte a jesli jest to zapisujemy to w zmiennej isTwoEmpty
+            if (stacks[stack].GetExposed() > 0)
+                cardTwo = stacks[stack].GetTopCards(1)[0];
+            else
+                isTwoEmpty = true;
+
+            // Sprawdzamy funkcja CanMoveCard czy mozna przesunac karte biorac pod uwage nasze karty i czy stos drugi jest pusty i jesli mozna to je przesuwamy
+            if (CanMoveCard(cardOne, cardTwo, isTwoEmpty))
+            {
+                drawStack.DeleteDrawCard();
+                stacks[stack].AddCards(new[] { cardOne });
+
+                info = "Przesunięto karty.";
+            }
+
+            return info;
+        }
+
         // Funkcja sprawdzajaca czy mozna przesunac karty
         static bool CanMoveCard(int cardOne, int cardTwo, bool isTwoEmpty)
         {
@@ -133,19 +192,45 @@ namespace Pasjans
         }
 
         // Rysowanie w konsoli stosow
-        static void Draw(string[] lines, Stack[] stacks, string info)
+        static void Draw(string[] lines, Stack[] stacks, DrawStack drawStack, string info)
         {
+            Console.Clear();
+
             // Tworzenie tablicy list do przechowywania linii do wydrukowania otrzymanych od stosow
             List<string>[] stackLines = new List<string>[7];
             for (int i = 0; i < 7; i++)
             {
                 stackLines[i] = new List<string>();
             }
+            
+            // Pobieranie od stosu do dobierania linii do wydrukowania
+            List<string> drawStackLines = drawStack.GenerateDrawLines(lines);
+
+            // Dodawanie do linii do wydruku linii stosow ktore beda na gorze
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    if (j == 0)
+                    {
+                        stackLines[j].Add(drawStackLines[i]);
+                    }
+                    else if (j == 1)
+                    {
+                        stackLines[j].Add(lines[52 * 7 + i]);
+                    }
+                    else
+                    {
+                        stackLines[j].Add(emptyPreset);
+                    }
+                }
+            }
 
             // Pobieranie od stosow linii do wyprintowania
             for (int i = 0; i < 7; i++)
             {
-                stackLines[i] = stacks[i].GenerateDrawLines(lines);
+                foreach (string line in stacks[i].GenerateDrawLines(lines))
+                    stackLines[i].Add(line);
             }
 
             // Printowanie linii w konsoli

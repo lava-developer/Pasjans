@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Pasjans
 {
     // Klasa stosow na ktorych znajduja sie karty
-    // Wazne: w kartach na stosie w liscie places karta najbardziej na wierzchu to ta z indeksem 0
+    // Uwaga: wierzchnia karta w places to ta z indeksem 0
     internal class Stack
     {
         // Tworzenie listy na przechowywanie kart jakie sa na stosie
