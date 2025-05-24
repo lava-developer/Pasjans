@@ -70,7 +70,7 @@ namespace Pasjans
                         int.TryParse(inputElements[2], out int amount) && 
                         int.TryParse(inputElements[3], out int stackTwo))
                     {
-                        info = MoveCard(stacks, stackOne - 1, stackTwo - 1);
+                        //info = MoveCard(stacks, stackOne - 1, stackTwo - 1);
                     }
                     else
                         info = "Nieprawidlowe wejscie.";
@@ -87,38 +87,7 @@ namespace Pasjans
             }
         }
 
-        static string MoveCard(Stack[] stacks, int stackOne, int stackTwo)
-        {
-            int[] cards = stacks[stackOne].GetTopCards(2);
-            int cardTwo = stacks[stackTwo].GetTopCards(1)[0];
-            int valueOne = cards[cards.Length - 1] / 4;
-            int valueTwo = cardTwo / 4;
-            int suitOne = cards[cards.Length - 1] % 4;
-            int suitTwo = cardTwo % 4;
-
-            //if (valueOne == valueTwo - 1 && ((suitOne >= 2 && suitTwo < 2) || (suitTwo >= 2 && suitOne < 2)))
-            //{
-
-            Debug.WriteLine($"Przesuwam z talii {stackOne} do {stackTwo}");
-            Debug.WriteLine("Przed ruch:");
-            stacks[stackOne].PrintStack();
-            stacks[stackTwo].PrintStack();
-
-            stacks[stackOne].DeleteTop(2);
-            stacks[stackTwo].AddCards((int[])cards.Clone());
-            //stacks[stackOne].exposed -= 3;
-            stacks[stackTwo].exposed += 2;
-
-            Debug.WriteLine("Po ruchu:");
-            stacks[stackOne].PrintStack();
-            stacks[stackTwo].PrintStack();
-
-            return "Przesunięto kartę.";
-            //}
-
-            //return "Nieprawidłowy ruch.";
-
-        }
+        
 
         // Rysowanie w konsoli stosow
         static void Draw(string[] lines, Stack[] stacks, string info)
