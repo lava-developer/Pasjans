@@ -35,7 +35,7 @@ namespace Pasjans
             // Losowanie kart w dane miejsca
             Random r = new Random();
             for (int i = 0; i < 7; i++)
-            { 
+            {
                 for (int j = i; j < 7; j++)
                 {
                     stackPlaces[i].Add(r.Next(0, 52));
@@ -44,7 +44,7 @@ namespace Pasjans
 
             // Stworzenie listy na karty poczatkowe do stosu do dobierania i wylosowanie ich
             List<int> drawStackCards = new List<int>();
-            for (int i = 0; i < 24;  i++)
+            for (int i = 0; i < 24; i++)
             {
                 drawStackCards.Add(r.Next(0, 52));
             }
@@ -60,9 +60,9 @@ namespace Pasjans
 
             // Stworzenie stosow kart
             PlayStack[] stacks = new PlayStack[7];
-            for (int i = 0;i < 7; i++)
+            for (int i = 0; i < 7; i++)
             {
-                stacks[i] = new PlayStack(stackPlaces[i], 1);
+                stacks[i] = new PlayStack(stackPlaces[i]);
             }
 
             // Deklaracja zmiennej przechowujacej informacje ktore beda wyswietlane w konsoli
@@ -71,11 +71,12 @@ namespace Pasjans
             // Petla gry
             while (true)
             {
+                // Rysowanie w konsoli elementow
                 Draw(lines, topStacks, drawStack, stacks, info);
 
                 // Pobieranie danych od gracza
                 string input = Console.ReadLine();
-                string[] inputElements = input.Split(new[] { ' ' },StringSplitOptions.RemoveEmptyEntries);
+                string[] inputElements = input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 info = "Niepoprawne wejście";
 
@@ -84,39 +85,56 @@ namespace Pasjans
                 {
                     string command = inputElements[0];
 
-                    // Jesli wybrano komende przesuwania kart i argumenty sa poprawne wywolujemy funkcje przesuwajaca karty
-                    if (command == "m" || command == "move" || command == "p" || command == "przesun")
+                    // Jesli wybrano komende przesuwania kart sprawdzamy czy argumenty sa poprawne i wywolujemy funkcje od przesuwania kart
+                    if ((command == "m" || command == "move" || command == "p" || command == "przesun") && inputElements.Length >= 3)
                     {
+                        // Sprawdzanie czy uzyto odpowiednich argumentow do przesuwania kart
+                        bool elemOneParse = int.TryParse(inputElements[1], out int elemOne);
+                        bool elemTwoParse = int.TryParse(inputElements[2], out int elemTwo);
+                        bool elemThreeParse = false;
+                        int elemThree = 0;
+                        if (inputElements.Length >= 4)
+                            elemThreeParse = int.TryParse(inputElements[3], out elemThree);
+                        // W tym przypadku przesuwamy okreslona ilosc kart ze stosu na stos
                         if (inputElements.Length == 4 &&
-                            int.TryParse(inputElements[1], out int amount) &&
-                            int.TryParse(inputElements[2], out int stackOne) &&
-                            stackOne >= 1 && stackOne <= 7 &&
-                            int.TryParse(inputElements[3], out int stackTwo) &&
-                            stackTwo >= 1 && stackTwo <= 7)
+                            elemOneParse &&
+                            elemTwoParse &&
+                            IsValidStackIndex(elemTwo) &&
+                            elemThreeParse &&
+                            IsValidStackIndex(elemThree))
                         {
-                            info = MoveCards(stacks, amount, stackOne - 1, stackTwo - 1);
+                            info = MoveCards(stacks[elemTwo - 1], stacks[elemThree - 1], elemOne);
                         }
-                        // W tym przypadku pobieramy karte ze stosu
+                        // W tym przypadku pobieramy karte ze stosu do pobierania na jeden ze zwyklych stosow
+                        else if (inputElements[1] == "d" && elemTwoParse)
+                        {
+                            info = MoveCards(drawStack, stacks[elemTwo - 1], 1);
+                        }
+                        // W tym przypadku pobieramy karte ze stosu do pobierania na jeden ze stosow koncowych
                         else if (inputElements[1] == "d" &&
-                            int.TryParse(inputElements[2], out int stackDraw))
+                            inputElements[2][0] == 't' &&
+                            int.TryParse(inputElements[2][1].ToString(), out int topStackDrawDep) &&
+                            topStackDrawDep >= 1 && topStackDrawDep <= 4)
                         {
-                            info = MoveCardFromDraw(drawStack, stacks[stackDraw - 1]);
+                            info = MoveCards(drawStack, topStacks[topStackDrawDep - 1], 1);
                         }
+                        // W tym przypadku przesuwamy karte z jednego ze stosow koncowych na zwykly stos
                         else if (inputElements[1][0] == 't' &&
                             int.TryParse(inputElements[1][1].ToString(), out int topStackFrom) &&
                             topStackFrom >= 1 && topStackFrom <= 4 &&
-                            int.TryParse(inputElements[2], out int stackTopFrom) &&
-                            stackTopFrom >= 1 && stackTopFrom <= 7)
+                            elemTwoParse &&
+                            IsValidStackIndex(elemTwo))
                         {
-                            info = MoveCardTop(topStacks[topStackFrom - 1], stacks[stackTopFrom - 1], true);
+                            info = MoveCards(topStacks[topStackFrom - 1], stacks[elemTwo - 1], 1);
                         }
-                        else if (int.TryParse(inputElements[1], out int stackTopDep) &&
-                            stackTopDep >= 1 && stackTopDep <= 7 &&
+                        // W tym przypadku przesuwamy karte ze zwyklego stosu na stos koncowy
+                        else if (elemOneParse &&
+                            IsValidStackIndex(elemOne) &&
                             inputElements[2][0] == 't' &&
                             int.TryParse(inputElements[2][1].ToString(), out int topStackDep) &&
                             topStackDep >= 1 && topStackDep <= 4)
                         {
-                            info = MoveCardTop(topStacks[topStackDep - 1], stacks[stackTopDep - 1], false);
+                            info = MoveCards(stacks[elemOne - 1], topStacks[topStackDep - 1], 1);
                         }
                     }
                     // Jesli wybrano komende do przekladania kart ze stosu to wywolujemy funkcje ktora to robi
@@ -138,109 +156,48 @@ namespace Pasjans
             }
         }
 
+        // Funkcja sprawdzajaca czy dany indeks jest odpowiedni (czy odpowiada jakiemus stosowi)
+        static bool IsValidStackIndex(int index)
+        {
+            return index >= 1 && index <= 7;
+        }
+
         // Funkcja odpowiadajca za przesuwanie kart
-        static string MoveCards(PlayStack[] stacks, int amount, int stackOne, int stackTwo)
+        static string MoveCards(dynamic stackOne, dynamic stackTwo, int amount)
         {
             string info = "Niedozwolony ruch.";
 
-            
-            // Przechodzimy dalej tylko jesli ilosc jest mniejsza lub rowna ilosci odlonietych (nie mozna zabrac wiecej niz widzimy)
-            if (stacks[stackOne].GetExposed() >= amount)
+            // Przechodzimy dalej tylko jesli ilosc do przesuniecia jest mniejsza lub rowna ilosci kart na stosie z ktorego bierzemy
+            // lub w przypadku brania ze stosu zwyklego jesli ilosc ktora bierzemy jest mniejsza lub rowna ilosci odslonietych
+            if ((stackOne.GetCardAmount() >= amount && !(stackOne is PlayStack)) || ((stackOne is PlayStack) && stackOne.GetExposed() >= amount))
             {
                 // Pobieramy ze stosu pierwszego karty do przesuniecia
-                int[] cards = (int[])stacks[stackOne].GetTopCards(amount).Clone();
+                int[] cards = (int[])stackOne.GetTopCards(amount).Clone();
                 int cardOne = cards[amount - 1];
+
                 int cardTwo = 0;
                 bool isTwoEmpty = false;
 
                 // Jesli drugi stos nie jest pusty to bierzemy z niego wierzchnia karte a jesli jest to zapisujemy to w zmiennej isTwoEmpty
-                if (stacks[stackTwo].GetExposed() > 0)
-                    cardTwo = ((int[])stacks[stackTwo].GetTopCards(1).Clone())[0];
+                if (stackTwo.GetCardAmount() > 0)
+                    cardTwo = ((int[])stackTwo.GetTopCards(1).Clone())[0];
                 else
-                    isTwoEmpty = true;
-
-                // Sprawdzamy funkcja CanMoveCard czy mozna przesunac karte biorac pod uwage nasze karty i czy stos drugi jest pusty i jesli mozna to je przesuwamy
-                if (CanMoveCard(cardOne, cardTwo, isTwoEmpty, false))
                 {
-                    stacks[stackOne].DeleteTop(amount);
-                    stacks[stackTwo].AddCards(cards);
+                    isTwoEmpty = true;
+                    // Jesli przesuwamy do stosu koncowego i jest on pusty to ustawiamy karte 2 na indeks tego stosu zeby mozna bylo sprawdzic
+                    // czy karty maja taki sam kolor
+                    if (stackTwo is TopStack)
+                        cardTwo = stackTwo.GetID();
+                }
+
+                // Sprawdzamy funkcja CanMoveCard czy mozna przesunac karte biorac pod uwage nasze karty, czy stos drugi jest pusty oraz
+                // czy przesuwamy na stos koncowy i jesli mozna to je przesuwamy
+                if (CanMoveCard(cardOne, cardTwo, isTwoEmpty, stackTwo is TopStack))
+                {
+                    stackOne.DeleteTop(amount);
+                    stackTwo.AddCards(cards);
                     
                     info = "Przesunięto karty.";
-                }
-            }
-
-            return info;
-        }
-
-        // Funkcja sluzaca do przekladania karty ze stosu do dobierania do zwyklego stosu
-        static string MoveCardFromDraw(DrawStack drawStack, PlayStack stack)
-        {
-            string info = "Nieprawidłowy ruch.";
-
-            // Pobieramy ze stosu do dobierania karte do przesuniecia
-            int cardOne = drawStack.GetTopCards(1)[0];
-            int cardTwo = 0;
-            bool isTwoEmpty = false;
-
-            // Jesli drugi stos nie jest pusty to bierzemy z niego wierzchnia karte a jesli jest to zapisujemy to w zmiennej isTwoEmpty
-            if (stack.GetExposed() > 0)
-                cardTwo = stack.GetTopCards(1)[0];
-            else
-                isTwoEmpty = true;
-
-            // Sprawdzamy funkcja CanMoveCard czy mozna przesunac karte biorac pod uwage nasze karty i czy stos drugi jest pusty i jesli mozna to je przesuwamy
-            if (CanMoveCard(cardOne, cardTwo, isTwoEmpty, false))
-            {
-                drawStack.DeleteTop(1);
-                stack.AddCards(new[] { cardOne });
-
-                info = "Przesunięto karty.";
-            }
-
-            return info;
-        }
-
-        static string MoveCardTop(TopStack topStack, PlayStack stack, bool isFrom)
-        {
-            string info = "Nieprawidłowy ruch.";
-
-            Debug.WriteLine("a");
-
-            // Pobieramy ze stosu do dobierania karte do przesuniecia
-            int cardOne = 0;
-            int cardTwo = 0;
-            bool isTwoEmpty = false;
-
-            if (isFrom)
-            {
-                cardOne = topStack.GetTopCards(1)[0];
-                // Jesli drugi stos nie jest pusty to bierzemy z niego wierzchnia karte a jesli jest to zapisujemy to w zmiennej isTwoEmpty
-                if (stack.GetExposed() > 0)
-                    cardTwo = stack.GetTopCards(1)[0];
-                else
-                    isTwoEmpty = true;
-
-                if (CanMoveCard(cardOne, cardTwo, isTwoEmpty, false))
-                {
-                    topStack.DeleteTop(1);
-                    stack.AddCards(new[] { cardOne });
-                }
-            }
-            else
-            {
-                Debug.WriteLine("b");
-                cardOne = stack.GetTopCards(1)[0];
-                // Jesli drugi stos nie jest pusty to bierzemy z niego wierzchnia karte a jesli jest to zapisujemy to w zmiennej isTwoEmpty
-                if (stack.GetExposed() > 0)
-                    cardTwo = topStack.GetTopCards(1)[0];
-                else
-                    isTwoEmpty = true;
-
-                if (CanMoveCard(cardOne, cardTwo, isTwoEmpty, true))
-                {
-                    Debug.WriteLine("c");
-                    stack.DeleteTop(1);
-                    topStack.AddCards(new[] { cardOne });
                 }
             }
 
@@ -256,8 +213,16 @@ namespace Pasjans
             int suitOne = cardOne % 4;
             int suitTwo = cardTwo % 4;
 
+            // Jesli odkladamy karte na stos koncowy
             if (isDeposit)
             {
+                // Jesli ten stos jest pusty to zwracamy prawde jesli wartosc pierwszej karty to 0 (as)
+                if (isTwoEmpty && suitOne == suitTwo)
+                {
+                    return valueOne == 0;
+                }
+
+                // Zwracamy prawde jesli karty maja taki sam kolor i jedna ma wyzsza o 1 wartosc od drugiej
                 return valueOne == valueTwo + 1 && suitOne == suitTwo;
             }
 
@@ -281,6 +246,7 @@ namespace Pasjans
             // Pobieranie od stosu do dobierania linii do wydrukowania
             List<string> drawStackLines = drawStack.GenerateDrawLines(lines);
 
+            // Pobieranie linii stosow koncowych do wydrukowania
             List<string>[] topStackLines = new List<string>[4];
             for (int i = 0; i < 4; i++)
             {

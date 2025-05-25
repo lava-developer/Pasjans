@@ -12,17 +12,14 @@ namespace Pasjans
     internal class PlayStack : Stack
     {
         // Zmienna ktora przechowuje ilosc kart widocznych dla gracza (odslonietych)
-        public int exposed;
+        public int exposed = 1;
 
         // Presety do rysowania kart
         const string emptyPreset = "           ";
         const string topPreset = "┌─────────┐";
 
-        // Konstruktor, pobieranie miejsc przy tworzeniu stosu
-        public PlayStack(List<int> cards, int exposed) : base(cards)
-        {
-            this.exposed = exposed;
-        }
+        // Konstruktor z klasy bazowej
+        public PlayStack(List<int> cards) : base(cards) { }
 
         // Funkcja zwracajaca linie jakie nalezy wydrukowac w konsoli
         public override List<string> GenerateDrawLines(string[] lines)
@@ -76,6 +73,7 @@ namespace Pasjans
         public override void DeleteTop(int amount)
         {
             base.DeleteTop(amount);
+
             exposed -= amount;
             if (exposed < 1 && cards.Count > 0)
                 exposed = 1;

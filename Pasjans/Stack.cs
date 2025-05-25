@@ -13,7 +13,7 @@ namespace Pasjans
     // Uwaga: wierzchnia karta w cards to ta z indeksem 0
     internal abstract class Stack
     {
-        // Zadeklarowanie listy przechowujacej karty obecne na stosie
+        // Lista przechowujaca karty obecne na stosie
         protected List<int> cards;
 
         // Konstruktor pobierajacy karty poczatkowe
@@ -22,7 +22,7 @@ namespace Pasjans
             this.cards = cards;
         }
 
-        // Funkcja odpowiedzialna za zwracanie linii do wypisania w konsoli
+        // Funkcja odpowiedzialna za zwracanie linii gornej karty stosu do wypisania w konsoli
         public virtual List<string> GenerateDrawLines(string[] lines)
         {
             List<string> drawLines = new List<string>();
@@ -35,6 +35,7 @@ namespace Pasjans
             return drawLines;
         }
 
+        // Funkcja zwracajaca ilosc kart na stosie
         public int GetCardAmount()
         {
             return cards.Count;
