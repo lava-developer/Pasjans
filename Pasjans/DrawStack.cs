@@ -8,30 +8,10 @@ using System.Threading.Tasks;
 namespace Pasjans
 {
     // Klasa stosu z ktorego dobiera sie karty
-    // Uwaga: wierzchnia karta w cards to ta z indeksem 0
-    internal class DrawStack
+    internal class DrawStack : Stack
     {
-        // Zadeklarowanie listy przechowujacej karty obecne na stosie
-        List<int> cards = new List<int>();
-
-        // Konstruktor pobierajacy karty poczatkowe
-        public DrawStack(List<int> cards)
-        {
-            this.cards = cards;
-        }
-
-        // Funkcja odpowiedzialna za zwracanie linii do wypisania w konsoli
-        public List<string> GenerateDrawLines(string[] lines)
-        {
-            List<string> drawLines = new List<string>();
-
-            for (int i = 0; i < 7; i++)
-            {
-                drawLines.Add(lines[cards[0] * 7 + i]);
-            }
-
-            return drawLines;
-        }
+        // Konstruktor z klasy bazowej
+        public DrawStack(List<int> cards) : base(cards) { }
 
         // Funkcja odpowiedzialna za przekladanie karty z gory stosu na dol
         public void Draw()
@@ -40,18 +20,5 @@ namespace Pasjans
             cards.RemoveAt(0);
             cards.Insert(cards.Count, card);
         }
-
-        // Funkcja zwracajaca gorna karte stosu
-        public int GetDrawCard()
-        {
-            return cards[0];
-        }
-
-        // Funkcja usuwajaca gorna karte stosu
-        public void DeleteDrawCard()
-        {
-            cards.RemoveAt(0);
-        }
-
     }
 }
