@@ -14,7 +14,7 @@ namespace Pasjans
     internal abstract class Stack
     {
         // Zadeklarowanie listy przechowujacej karty obecne na stosie
-        protected List<int> cards = new List<int>();
+        protected List<int> cards;
 
         // Konstruktor pobierajacy karty poczatkowe
         public Stack(List<int> cards)
@@ -35,8 +35,13 @@ namespace Pasjans
             return drawLines;
         }
 
+        public int GetCardAmount()
+        {
+            return cards.Count;
+        }
+
         // Funkcja zwracajaca okreslona ilosc kart ze szczytu stosu
-        public int[] GetTopCards(int amount)
+        public virtual int[] GetTopCards(int amount)
         {
             int[] cards = new int[amount];
             for (int i = 0; i < amount; i++)
