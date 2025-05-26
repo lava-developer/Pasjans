@@ -25,20 +25,33 @@ namespace Pasjans
             // Wczytanie ascii artu kart z pliku
             string[] lines = File.ReadAllLines(@"..\..\cardArt.txt");
 
+            int[] cards = new int[52];
+
+            // Wypelnienie tablicy kartami (0-51)
+            for (int i = 0; i < 52; i++)
+            {
+                cards[i] = i;
+            }
+
+            // Tasowanie kart alorytmem Fishera-Yates'a
+            Random r = new Random();
+            for (int i = 0; i < cards.Length; i++)
+            {
+                int j = r.Next(i, cards.Length);
+                int temp = cards[i];
+                cards[i] = cards[j];
+                cards[j] = temp;
+            }
+
             // Stworzenie tablicy list do przechowywania wstepnych miejsc kart
             List<int>[] stackPlaces = new List<int>[7];
             for (int i = 0; i < 7; i++)
             {
                 stackPlaces[i] = new List<int>();
-            }
-
-            // Losowanie kart w dane miejsca
-            Random r = new Random();
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = i; j < 7; j++)
+                for (int j = 0; j < i + 1; j++)
                 {
-                    stackPlaces[i].Add(r.Next(0, 52));
+                    stackPlaces[i].Add(cards[0]);
+                    cards = cards.Skip(1).ToArray(); // Usuwanie karty z tablicy
                 }
             }
 
@@ -46,7 +59,8 @@ namespace Pasjans
             List<int> drawStackCards = new List<int>();
             for (int i = 0; i < 24; i++)
             {
-                drawStackCards.Add(r.Next(0, 52));
+                drawStackCards.Add(cards[0]);
+                cards = cards.Skip(1).ToArray();
             }
 
             // Stworzenie stosu do dobierania
