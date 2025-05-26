@@ -14,7 +14,7 @@ namespace Pasjans
 {
     internal class Program
     {
-        // Preset pustego miejsca
+        // Preset pustej linii do rysowania stosu
         const string emptyPreset = "           ";
 
         static void Main(string[] args)
@@ -22,9 +22,13 @@ namespace Pasjans
             // Ustawienie enkodowania aby dzialaly znaki specjalne
             Console.OutputEncoding = Encoding.UTF8;
 
+            // Ustawienie rozmiaru okna konsoli
+            Console.SetWindowSize(85, 40);
+
             // Wczytanie ascii artu kart z pliku
             string[] lines = File.ReadAllLines(@"..\..\cardArt.txt");
-
+            
+            // Zmienna przechwujaca karty
             int[] cards = new int[52];
 
             // Wypelnienie tablicy kartami (0-51)
@@ -35,9 +39,9 @@ namespace Pasjans
 
             // Tasowanie kart alorytmem Fishera-Yates'a
             Random r = new Random();
-            for (int i = 0; i < cards.Length; i++)
+            for (int i = cards.Length - 1; i > 0; i--)
             {
-                int j = r.Next(i, cards.Length);
+                int j = r.Next(i + 1);
                 int temp = cards[i];
                 cards[i] = cards[j];
                 cards[j] = temp;
@@ -277,7 +281,7 @@ namespace Pasjans
                         case 0:
                             stackLines[j].Add(drawStackLines[i]); break;
                         case 1:
-                            stackLines[j].Add(lines[52 * 7 + i]); break;
+                            stackLines[j].Add(drawStackLines[7 + i]); break;
                         case 2:
                             stackLines[j].Add(emptyPreset); break;
                         default:
@@ -294,7 +298,7 @@ namespace Pasjans
             }
 
             // Printowanie linii w konsoli
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < 35; i++)
             {
                 for (int j = 0; j < 7; j++)
                 {

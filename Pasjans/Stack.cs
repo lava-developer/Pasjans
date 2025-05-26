@@ -16,6 +16,10 @@ namespace Pasjans
         // Lista przechowujaca karty obecne na stosie
         protected List<int> cards;
 
+        // Presety linii do rysowania stosow
+        protected const string emptyPreset = "           ";
+        protected const string topPreset = "┌─────────┐";
+
         // Konstruktor pobierajacy karty poczatkowe
         public Stack(List<int> cards)
         {

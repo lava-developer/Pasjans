@@ -14,10 +14,6 @@ namespace Pasjans
         // Zmienna ktora przechowuje ilosc kart widocznych dla gracza (odslonietych)
         public int exposed = 1;
 
-        // Presety do rysowania kart
-        const string emptyPreset = "           ";
-        const string topPreset = "┌─────────┐";
-
         // Konstruktor z klasy bazowej
         public PlayStack(List<int> cards) : base(cards) { }
 
@@ -55,7 +51,7 @@ namespace Pasjans
                 drawLines.Add(lines[cards[0] * 7 + i]);
             }
             // Reszte linii dajemy puste aby razem bylo 25
-            for (int i = 0; i < 25 - (cards.Count + 5 + exposed); i++)
+            for (int i = 0; i < 35 - (cards.Count + 5 + exposed); i++)
             {
                 drawLines.Add(emptyPreset);
             }
