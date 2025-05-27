@@ -23,10 +23,10 @@ namespace Pasjans
             // Zmienna do przechowywania linii
             List<string> drawLines = new List<string>();
 
-            // Jesli stos jest pusty zwracamy 25 pustych linii
+            // Jesli stos jest pusty zwracamy 37 pustych linii
             if (cards.Count == 0)
             {
-                for (int i = 0; i < 25; i++)
+                for (int i = 0; i < 37; i++)
                 {
                     drawLines.Add(emptyPreset);
                 }
@@ -50,8 +50,8 @@ namespace Pasjans
             {
                 drawLines.Add(lines[cards[0] * 7 + i]);
             }
-            // Reszte linii dajemy puste aby razem bylo 25
-            for (int i = 0; i < 35 - (cards.Count + 5 + exposed); i++)
+            // Reszte linii dajemy puste aby razem bylo 37
+            for (int i = 0; i < 36 - (cards.Count + 5 + exposed); i++)
             {
                 drawLines.Add(emptyPreset);
             }

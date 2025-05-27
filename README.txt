@@ -1,0 +1,1 @@
+Gra Pasjans stworzona na potrzeby konkursu Gigathon.

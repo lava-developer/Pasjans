@@ -8,7 +8,9 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Data;
 
 namespace Pasjans
 {
@@ -17,74 +19,59 @@ namespace Pasjans
         // Preset pustej linii do rysowania stosu
         const string emptyPreset = "           ";
 
+        // Zmienna przechwujaca karty
+        static int[] cards = new int[52];
+
+        // Stworzenie tablicy list do przechowywania wstepnych miejsc kart
+        static List<int>[] stackPlaces = new List<int>[7];
+
+        // Stworzenie listy na karty poczatkowe do stosu do dobierania i wylosowanie ich
+        static List<int> drawStackCards = new List<int>();
+
+        // Stworzenie stosu do dobierania
+        static DrawStack drawStack;
+
+        static TopStack[] topStacks = new TopStack[4];
+
+        // Stworzenie stosow kart
+        static PlayStack[] stacks = new PlayStack[7];
+
+        static string info;
+
         static void Main(string[] args)
         {
             // Ustawienie enkodowania aby dzialaly znaki specjalne
             Console.OutputEncoding = Encoding.UTF8;
 
-            // Ustawienie rozmiaru okna konsoli
-            Console.SetWindowSize(85, 40);
+            // Maksymalizacja okna konsoli
+            ShowWindow(GetConsoleWindow(), SW_MAXIMIZE);
+
+            // Ustawienie wielkosci czcionki w konsoli
+            SetConsoleFontSize(20); // Ustawienie rozmiaru czcionki konsoli
 
             // Wczytanie ascii artu kart z pliku
             string[] lines = File.ReadAllLines(@"..\..\cardArt.txt");
-            
-            // Zmienna przechwujaca karty
-            int[] cards = new int[52];
 
-            // Wypelnienie tablicy kartami (0-51)
-            for (int i = 0; i < 52; i++)
+            Restart();
+
+            for (int j = 0; j < 12; j++)
             {
-                cards[i] = i;
+                topStacks[0].AddCards(new[] { 0 });
+            }
+            for (int j = 0; j < 13; j++)
+            {
+                topStacks[1].AddCards(new[] { 5});
+            }
+            for (int j = 0; j < 13; j++)
+            {
+                topStacks[2].AddCards(new[] { 10 });
+            }
+            for (int j = 0; j < 13; j++)
+            {
+                topStacks[3].AddCards(new[] { 15 });
             }
 
-            // Tasowanie kart alorytmem Fishera-Yates'a
-            Random r = new Random();
-            for (int i = cards.Length - 1; i > 0; i--)
-            {
-                int j = r.Next(i + 1);
-                int temp = cards[i];
-                cards[i] = cards[j];
-                cards[j] = temp;
-            }
-
-            // Stworzenie tablicy list do przechowywania wstepnych miejsc kart
-            List<int>[] stackPlaces = new List<int>[7];
-            for (int i = 0; i < 7; i++)
-            {
-                stackPlaces[i] = new List<int>();
-                for (int j = 0; j < i + 1; j++)
-                {
-                    stackPlaces[i].Add(cards[0]);
-                    cards = cards.Skip(1).ToArray(); // Usuwanie karty z tablicy
-                }
-            }
-
-            // Stworzenie listy na karty poczatkowe do stosu do dobierania i wylosowanie ich
-            List<int> drawStackCards = new List<int>();
-            for (int i = 0; i < 24; i++)
-            {
-                drawStackCards.Add(cards[0]);
-                cards = cards.Skip(1).ToArray();
-            }
-
-            // Stworzenie stosu do dobierania
-            DrawStack drawStack = new DrawStack(drawStackCards);
-
-            TopStack[] topStacks = new TopStack[4];
-            for (int i = 0; i < 4; i++)
-            {
-                topStacks[i] = new TopStack(i);
-            }
-
-            // Stworzenie stosow kart
-            PlayStack[] stacks = new PlayStack[7];
-            for (int i = 0; i < 7; i++)
-            {
-                stacks[i] = new PlayStack(stackPlaces[i]);
-            }
-
-            // Deklaracja zmiennej przechowujacej informacje ktore beda wyswietlane w konsoli
-            string info = "Wykonaj ruch.";
+            info = "Wykonaj ruch.";
 
             // Petla gry
             while (true)
@@ -154,6 +141,15 @@ namespace Pasjans
                         {
                             info = MoveCards(stacks[elemOne - 1], topStacks[topStackDep - 1], 1);
                         }
+
+                        if (topStacks.All(stack => stack.GetCardAmount() == 13))
+                        {
+                            info = "Gratulacje, wygrałeś! Aby zagrać ponownie, wciśnij jakikolwiek przycisk.";
+                            Draw(lines, topStacks, drawStack, stacks, info);
+                            Console.ReadKey();
+                            Restart();
+                            info = "Zrestartowano grę. Wykonaj ruch.";
+                        }
                     }
                     // Jesli wybrano komende do przekladania kart ze stosu to wywolujemy funkcje ktora to robi
                     else if (command == "d" || command == "draw" || command == "dobierz")
@@ -161,16 +157,74 @@ namespace Pasjans
                         drawStack.Draw();
                         info = "Dobrano kartę.";
                     }
-                    // Funkcja do debugowania
-                    else if (command == "rem")
+                    // Jesli wybrano odpowiednia komende to restartujemy gre
+                    else if (command == "r" || command == "restart")
                     {
-                        stacks[0].DeleteTop(1);
-                        info = "Usunięto kartę.";
+                        Restart();
+                        info = "Zrestartowano grę. Wykonaj ruch.";
+                    }
+                    // Jesli wybrano komende do wyswietlania pomocy to otwieramy plik z pomoca
+                    else if (command == "h" || command == "help" || command == "p" || command == "pomoc")
+                    {
+                        Process.Start(@"..\..\..\README.txt");
+                        info = "Otwarto plik pomocy.";
                     }
                     // Jesli wybrano komende wyjscia to wychodzimy z gry
                     else if (command == "e" || command == "exit" || command == "w" || command == "wyjscie")
                         break;
                 }
+            }
+        }
+
+        static void Restart()
+        {
+            cards = new int[52];
+            // Wypelnienie tablicy kartami (0-51)
+            for (int i = 0; i < 52; i++)
+            {
+                cards[i] = i;
+            }
+
+            // Tasowanie kart alorytmem Fishera-Yates'a
+            Random r = new Random();
+            for (int i = cards.Length - 1; i > 0; i--)
+            {
+                int j = r.Next(i + 1);
+                int temp = cards[i];
+                cards[i] = cards[j];
+                cards[j] = temp;
+            }
+
+            stackPlaces = new List<int>[7];
+            for (int i = 0; i < 7; i++)
+            {
+                stackPlaces[i] = new List<int>();
+                for (int j = 0; j < i + 1; j++)
+                {
+                    stackPlaces[i].Add(cards[0]);
+                    cards = cards.Skip(1).ToArray();
+                }
+            }
+
+            drawStackCards = new List<int>();
+            for (int i = 0; i < 24; i++)
+            {
+                drawStackCards.Add(cards[0]);
+                cards = cards.Skip(1).ToArray();
+            }
+
+            drawStack = new DrawStack(drawStackCards);
+
+            topStacks = new TopStack[4];
+            for (int i = 0; i < 4; i++)
+            {
+                topStacks[i] = new TopStack(i);
+            }
+
+            stacks = new PlayStack[7];
+            for (int i = 0; i < 7; i++)
+            {
+                stacks[i] = new PlayStack(stackPlaces[i]);
             }
         }
 
@@ -298,11 +352,27 @@ namespace Pasjans
             }
 
             // Printowanie linii w konsoli
-            for (int i = 0; i < 35; i++)
+            for (int i = 0; i < 7; i++)
             {
                 for (int j = 0; j < 7; j++)
                 {
                     Console.Write(stackLines[j][i] + " ");
+                }
+                Console.WriteLine();
+            }
+
+            for (int i = 0; i < 7; i++)
+            {
+                Console.Write($"     {i + 1}      ");
+            }
+            Console.WriteLine();
+
+            // Printowanie linii w konsoli
+            for (int i = 0; i < 30; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    Console.Write(stackLines[j][i + 7] + " ");
                 }
                 Console.WriteLine();
             }
@@ -312,5 +382,53 @@ namespace Pasjans
 
             Console.Write("> ");
         }
+
+        // Potrzebne do maksymalizowania okna konsoli
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        const int SW_MAXIMIZE = 3;
+
+        // Potrzebne do ustawiania czcionki konsoli
+        [StructLayout(LayoutKind.Sequential)]
+        public struct COORD
+        {
+            public short X;
+            public short Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct CONSOLE_FONT_INFO_EX
+        {
+            public int cbSize;
+            public int nFont;
+            public COORD dwFontSize;
+            public int FontFamily;
+            public int FontWeight;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string FaceName;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool SetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX lpConsoleCurrentFontEx);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetStdHandle(int nStdHandle);
+
+        const int STD_OUTPUT_HANDLE = -11;
+
+        static void SetConsoleFontSize(short fontSize)
+        {
+            IntPtr hnd = GetStdHandle(STD_OUTPUT_HANDLE);
+            CONSOLE_FONT_INFO_EX info = new CONSOLE_FONT_INFO_EX();
+            info.cbSize = Marshal.SizeOf(info);
+            info.FaceName = "Consolas";
+            info.dwFontSize = new COORD() { X = 0, Y = fontSize };
+            SetCurrentConsoleFontEx(hnd, false, ref info);
+        }
     }
 }
+
