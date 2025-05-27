@@ -75,17 +75,17 @@ namespace Pasjans
                     string command = inputElements[0];
 
                     // Jesli wybrano komende przesuwania kart sprawdzamy czy argumenty sa poprawne i wywolujemy funkcje od przesuwania kart
-                    if ((command == "m" || command == "move" || command == "p" || command == "przesun") && inputElements.Length >= 3)
+                    if (inputElements.Length >= 2)
                     {
                         // Sprawdzanie czy uzyto odpowiednich argumentow do przesuwania kart
-                        bool elemOneParse = int.TryParse(inputElements[1], out int elemOne);
-                        bool elemTwoParse = int.TryParse(inputElements[2], out int elemTwo);
+                        bool elemOneParse = int.TryParse(inputElements[0], out int elemOne);
+                        bool elemTwoParse = int.TryParse(inputElements[1], out int elemTwo);
                         bool elemThreeParse = false;
                         int elemThree = 0;
-                        if (inputElements.Length >= 4)
-                            elemThreeParse = int.TryParse(inputElements[3], out elemThree);
+                        if (inputElements.Length >= 3)
+                            elemThreeParse = int.TryParse(inputElements[2], out elemThree);
                         // W tym przypadku przesuwamy okreslona ilosc kart ze stosu na stos
-                        if (inputElements.Length == 4 &&
+                        if (inputElements.Length == 3 &&
                             elemOneParse &&
                             elemTwoParse &&
                             IsValidStackIndex(elemTwo) &&
@@ -94,22 +94,31 @@ namespace Pasjans
                         {
                             info = MoveCards(stacks[elemTwo - 1], stacks[elemThree - 1], elemOne);
                         }
+                        // W tym przypadku przesuwamy jedna karte ze stosu na stos
+                        if (inputElements.Length == 2 &&
+                            elemOneParse &&
+                            IsValidStackIndex(elemOne) &&
+                            elemTwoParse &&
+                            IsValidStackIndex(elemTwo))
+                        {
+                            info = MoveCards(stacks[elemOne - 1], stacks[elemTwo - 1], 1);
+                        }
                         // W tym przypadku pobieramy karte ze stosu do pobierania na jeden ze zwyklych stosow
-                        else if (inputElements[1] == "d" && elemTwoParse)
+                        else if (inputElements[0] == "d" && elemTwoParse)
                         {
                             info = MoveCards(drawStack, stacks[elemTwo - 1], 1);
                         }
                         // W tym przypadku pobieramy karte ze stosu do pobierania na jeden ze stosow koncowych
-                        else if (inputElements[1] == "d" &&
-                            inputElements[2][0] == 't' &&
-                            int.TryParse(inputElements[2][1].ToString(), out int topStackDrawDep) &&
+                        else if (inputElements[0] == "d" &&
+                            inputElements[1][0] == 'e' &&
+                            int.TryParse(inputElements[1][1].ToString(), out int topStackDrawDep) &&
                             topStackDrawDep >= 1 && topStackDrawDep <= 4)
                         {
                             info = MoveCards(drawStack, topStacks[topStackDrawDep - 1], 1);
                         }
                         // W tym przypadku przesuwamy karte z jednego ze stosow koncowych na zwykly stos
-                        else if (inputElements[1][0] == 't' &&
-                            int.TryParse(inputElements[1][1].ToString(), out int topStackFrom) &&
+                        else if (inputElements[0][0] == 'e' &&
+                            int.TryParse(inputElements[0][1].ToString(), out int topStackFrom) &&
                             topStackFrom >= 1 && topStackFrom <= 4 &&
                             elemTwoParse &&
                             IsValidStackIndex(elemTwo))
@@ -119,8 +128,8 @@ namespace Pasjans
                         // W tym przypadku przesuwamy karte ze zwyklego stosu na stos koncowy
                         else if (elemOneParse &&
                             IsValidStackIndex(elemOne) &&
-                            inputElements[2][0] == 't' &&
-                            int.TryParse(inputElements[2][1].ToString(), out int topStackDep) &&
+                            inputElements[1][0] == 'e' &&
+                            int.TryParse(inputElements[1][1].ToString(), out int topStackDep) &&
                             topStackDep >= 1 && topStackDep <= 4)
                         {
                             info = MoveCards(stacks[elemOne - 1], topStacks[topStackDep - 1], 1);
@@ -360,7 +369,7 @@ namespace Pasjans
             Console.WriteLine();
 
             // Printowanie linii zwyklych stosow w konsoli
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < 29; i++)
             {
                 for (int j = 0; j < 7; j++)
                 {
