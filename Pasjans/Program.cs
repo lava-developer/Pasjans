@@ -52,24 +52,8 @@ namespace Pasjans
             // Wczytanie ascii artu kart z pliku
             string[] lines = File.ReadAllLines(@"..\..\cardArt.txt");
 
+            // Wywolanie funkcji ktora przygotowuje gre
             Restart();
-
-            for (int j = 0; j < 12; j++)
-            {
-                topStacks[0].AddCards(new[] { 0 });
-            }
-            for (int j = 0; j < 13; j++)
-            {
-                topStacks[1].AddCards(new[] { 5});
-            }
-            for (int j = 0; j < 13; j++)
-            {
-                topStacks[2].AddCards(new[] { 10 });
-            }
-            for (int j = 0; j < 13; j++)
-            {
-                topStacks[3].AddCards(new[] { 15 });
-            }
 
             info = "Wykonaj ruch.";
 
@@ -176,9 +160,12 @@ namespace Pasjans
             }
         }
 
+        // Funkcja odpowiadajaca za restartowanie gry
         static void Restart()
         {
+            // Inicjalizacja tablicy kart
             cards = new int[52];
+
             // Wypelnienie tablicy kartami (0-51)
             for (int i = 0; i < 52; i++)
             {
@@ -195,6 +182,7 @@ namespace Pasjans
                 cards[j] = temp;
             }
 
+            // Inicjalizacja miejsc na stosy i umieszczanie na nich kart
             stackPlaces = new List<int>[7];
             for (int i = 0; i < 7; i++)
             {
@@ -206,6 +194,7 @@ namespace Pasjans
                 }
             }
 
+            // Inicjalizacja stosu do dobierania i umieszczanie na nim kart
             drawStackCards = new List<int>();
             for (int i = 0; i < 24; i++)
             {
@@ -215,12 +204,14 @@ namespace Pasjans
 
             drawStack = new DrawStack(drawStackCards);
 
+            // Inicjalizacja stosow koncowych
             topStacks = new TopStack[4];
             for (int i = 0; i < 4; i++)
             {
                 topStacks[i] = new TopStack(i);
             }
 
+            // Inicjalizacja stosow zwyklych
             stacks = new PlayStack[7];
             for (int i = 0; i < 7; i++)
             {
@@ -351,7 +342,7 @@ namespace Pasjans
                     stackLines[i].Add(line);
             }
 
-            // Printowanie linii w konsoli
+            // Printowanie linii gornych stosow w konsoli
             for (int i = 0; i < 7; i++)
             {
                 for (int j = 0; j < 7; j++)
@@ -361,13 +352,14 @@ namespace Pasjans
                 Console.WriteLine();
             }
 
+            // Printowanie numerow stosow w konsoli
             for (int i = 0; i < 7; i++)
             {
                 Console.Write($"     {i + 1}      ");
             }
             Console.WriteLine();
 
-            // Printowanie linii w konsoli
+            // Printowanie linii zwyklych stosow w konsoli
             for (int i = 0; i < 30; i++)
             {
                 for (int j = 0; j < 7; j++)
