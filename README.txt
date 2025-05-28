@@ -4,6 +4,7 @@ Gra Pasjans stworzona na potrzeby konkursu Gigathon przez Szymona Olejnik.
 
 Sposób uruchomienia projektu:
 Należy otworzyć plik Pasjans.exe w .\Pasjans\bin\Release\Pasjans.exe.
+Projekt był stworzony na system Windows 10, nie działa na starszych systemach, powinien działać na Windows 11.
 
 *****
 
