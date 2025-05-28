@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Security.Permissions;
 using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Data;
 
 namespace Pasjans
 {
@@ -22,20 +16,22 @@ namespace Pasjans
         // Zmienna przechwujaca karty
         static int[] cards = new int[52];
 
-        // Stworzenie tablicy list do przechowywania wstepnych miejsc kart
+        // Tablica list do przechowywania wstepnych miejsc kart
         static List<int>[] stackPlaces = new List<int>[7];
 
-        // Stworzenie listy na karty poczatkowe do stosu do dobierania i wylosowanie ich
+        // Lista na karty poczatkowe do stosu do dobierania i wylosowanie ich
         static List<int> drawStackCards = new List<int>();
 
-        // Stworzenie stosu do dobierania
+        // Stos do dobierania kart
         static DrawStack drawStack;
 
+        // Stosy koncowe
         static TopStack[] topStacks = new TopStack[4];
 
-        // Stworzenie stosow kart
+        // Zwykle stosy 
         static PlayStack[] stacks = new PlayStack[7];
 
+        // Zmienna przechowujaca informacje do wyswietlenia w konsoli
         static string info;
 
         static void Main(string[] args)
@@ -112,14 +108,14 @@ namespace Pasjans
                         else if (inputElements[0] == "d" &&
                             inputElements[1][0] == 'e' &&
                             int.TryParse(inputElements[1][1].ToString(), out int topStackDrawDep) &&
-                            topStackDrawDep >= 1 && topStackDrawDep <= 4)
+                            IsValidTopStackIndex(topStackDrawDep))
                         {
                             info = MoveCards(drawStack, topStacks[topStackDrawDep - 1], 1);
                         }
                         // W tym przypadku przesuwamy karte z jednego ze stosow koncowych na zwykly stos
                         else if (inputElements[0][0] == 'e' &&
                             int.TryParse(inputElements[0][1].ToString(), out int topStackFrom) &&
-                            topStackFrom >= 1 && topStackFrom <= 4 &&
+                            IsValidTopStackIndex(topStackFrom) &&
                             elemTwoParse &&
                             IsValidStackIndex(elemTwo))
                         {
@@ -130,7 +126,7 @@ namespace Pasjans
                             IsValidStackIndex(elemOne) &&
                             inputElements[1][0] == 'e' &&
                             int.TryParse(inputElements[1][1].ToString(), out int topStackDep) &&
-                            topStackDep >= 1 && topStackDep <= 4)
+                            IsValidTopStackIndex(topStackDep))
                         {
                             info = MoveCards(stacks[elemOne - 1], topStacks[topStackDep - 1], 1);
                         }
@@ -167,6 +163,18 @@ namespace Pasjans
                         break;
                 }
             }
+        }
+
+        // Funkcja sprawdzajaca czy dany indeks jest odpowiedni (czy odpowiada jakiemus stosowi)
+        static bool IsValidStackIndex(int index)
+        {
+            return index >= 1 && index <= 7;
+        }
+
+        // Funkcja sprawdzajaca czy dany indeks jest odpowiedni dla ktoregos stosu koncowego
+        static bool IsValidTopStackIndex(int index)
+        {
+            return index >= 1 && index <= 4;
         }
 
         // Funkcja odpowiadajaca za restartowanie gry
@@ -228,12 +236,6 @@ namespace Pasjans
             }
         }
 
-        // Funkcja sprawdzajaca czy dany indeks jest odpowiedni (czy odpowiada jakiemus stosowi)
-        static bool IsValidStackIndex(int index)
-        {
-            return index >= 1 && index <= 7;
-        }
-
         // Funkcja odpowiadajca za przesuwanie kart
         static string MoveCards(dynamic stackOne, dynamic stackTwo, int amount)
         {
@@ -270,6 +272,20 @@ namespace Pasjans
                     stackTwo.AddCards(cards);
                     
                     info = "Przesunięto karty.";
+                }
+                // Jesli nie mozna przesunac kart to jesli przesuwamy z jednego stosu zwyklego na drugi to sprawdzamy czy mozna przesunac
+                // wszystkie odloniete karty z pierwszego stosu na drugi (zakladamy ze uzytkownik pomylil sie przy wpisywaniu ilosci)
+                else if (stackOne is PlayStack && stackTwo is PlayStack)
+                {
+                    int stackOneExposed = stackOne.GetExposed();
+                    cards = (int[])stackOne.GetTopCards(stackOneExposed).Clone();
+                    if (CanMoveCard(cards[stackOneExposed - 1], cardTwo, false, false))
+                    {
+                        stackOne.DeleteTop(stackOneExposed);
+                        stackTwo.AddCards(cards);
+
+                        info = "Przesunięto karty.";
+                    }
                 }
             }
 

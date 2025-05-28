@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Pasjans
 {
@@ -72,16 +65,6 @@ namespace Pasjans
             {
                 this.cards.Insert(i, cards[i]);
             }
-        }
-
-        // Funkcja do debugowania
-        public void PrintStack()
-        {
-            foreach (int i in cards)
-            {
-                Debug.Write(i + " ");
-            }
-            Debug.WriteLine("");
         }
     }
 }
