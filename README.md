@@ -2,7 +2,7 @@
 
 Działająca w konsoli gra w pasjansa. Projekt został stworzony w języku C# z wykorzystaniem .NET Framework.
 
-|!\[ss1](Extras/ss1.png)|!\[ss2](Extras/ss2.png)|
+|![ss1](Extras/ss1.png)|![ss2](Extras/ss2.png)|
 |-|-|
 
 ### Sposób uruchomienia projektu:
