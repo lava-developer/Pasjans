@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Pasjans
 {
@@ -39,14 +40,12 @@ namespace Pasjans
             // Ustawienie enkodowania aby dzialaly znaki specjalne
             Console.OutputEncoding = Encoding.UTF8;
 
-            // Maksymalizacja okna konsoli
-            ShowWindow(GetConsoleWindow(), SW_MAXIMIZE);
-
-            // Ustawienie wielkosci czcionki w konsoli
-            SetConsoleFontSize(20); // Ustawienie rozmiaru czcionki konsoli
-
             // Wczytanie ascii artu kart z pliku
             string[] lines = File.ReadAllLines(@"..\..\cardArt.txt");
+
+            Console.WriteLine("Zmaksymalizuj okno konsoli, następnie naciśnij którykolwiek przycisk by zagrać");
+            _ = Console.ReadKey();
+            Console.Clear();
 
             // Wywolanie funkcji ktora przygotowuje gre
             Restart();
@@ -322,8 +321,6 @@ namespace Pasjans
         // Rysowanie w konsoli stosow
         static void Draw(string[] lines, TopStack[] topStacks, DrawStack drawStack, PlayStack[] stacks, string info)
         {
-            Console.Clear();
-
             // Tworzenie tablicy list do przechowywania linii do wydrukowania otrzymanych od stosow
             List<string>[] stackLines = new List<string>[7];
             for (int i = 0; i < 7; i++)
@@ -367,6 +364,10 @@ namespace Pasjans
                     stackLines[i].Add(line);
             }
 
+            Console.Clear();
+            Console.WriteLine("\x1b[3J");
+
+
             // Printowanie linii gornych stosow w konsoli
             for (int i = 0; i < 7; i++)
             {
@@ -398,53 +399,6 @@ namespace Pasjans
             Console.WriteLine(info);
 
             Console.Write("> ");
-        }
-
-        // Potrzebne do maksymalizowania okna konsoli
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern IntPtr GetConsoleWindow();
-
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        const int SW_MAXIMIZE = 3;
-
-        // Potrzebne do ustawiania czcionki konsoli
-        [StructLayout(LayoutKind.Sequential)]
-        public struct COORD
-        {
-            public short X;
-            public short Y;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct CONSOLE_FONT_INFO_EX
-        {
-            public int cbSize;
-            public int nFont;
-            public COORD dwFontSize;
-            public int FontFamily;
-            public int FontWeight;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string FaceName;
-        }
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool SetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX lpConsoleCurrentFontEx);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern IntPtr GetStdHandle(int nStdHandle);
-
-        const int STD_OUTPUT_HANDLE = -11;
-
-        static void SetConsoleFontSize(short fontSize)
-        {
-            IntPtr hnd = GetStdHandle(STD_OUTPUT_HANDLE);
-            CONSOLE_FONT_INFO_EX info = new CONSOLE_FONT_INFO_EX();
-            info.cbSize = Marshal.SizeOf(info);
-            info.FaceName = "Consolas";
-            info.dwFontSize = new COORD() { X = 0, Y = fontSize };
-            SetCurrentConsoleFontEx(hnd, false, ref info);
         }
     }
 }
